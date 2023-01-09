@@ -3,7 +3,7 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 RSGCore.Functions.CreateCallback('rsg-billing:server:checkbills', function(source, cb, target)
     local Player = RSGCore.Functions.GetPlayer(target)
     if Player then
-	    local citizenid = Player.PlayerData.citizenid
+        local citizenid = Player.PlayerData.citizenid
         exports.oxmysql:execute('SELECT * FROM player_bills WHERE citizenid = ?', {citizenid}, function(bills)
             cb(bills, citizenid)
         end)
@@ -87,4 +87,10 @@ RegisterNetEvent('rsg-billing:server:sendPlayerBill', function(playerid, amount)
     else
         TriggerClientEvent('RSGCore:Notify', source, 'Did not find player', 'error')
     end
+end)
+
+-- command to open the billing menu rather than radial
+RSGCore.Commands.Add("billing", "Opens the Billing Menu", {}, false, function(source)
+    local src = source
+    TriggerClientEvent('rsg-billing:client:billingMenu', src)
 end)
