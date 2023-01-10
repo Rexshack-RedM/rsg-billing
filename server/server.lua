@@ -1,9 +1,10 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
+-- check your bills recived
 RSGCore.Functions.CreateCallback('rsg-billing:server:checkbills', function(source, cb, target)
     local Player = RSGCore.Functions.GetPlayer(target)
     if Player then
-	    local citizenid = Player.PlayerData.citizenid
+        local citizenid = Player.PlayerData.citizenid
         exports.oxmysql:execute('SELECT * FROM player_bills WHERE citizenid = ?', {citizenid}, function(bills)
             cb(bills, citizenid)
         end)
@@ -12,6 +13,21 @@ RSGCore.Functions.CreateCallback('rsg-billing:server:checkbills', function(sourc
     end
 end)
 
+-- check your bills sent
+RSGCore.Functions.CreateCallback('rsg-billing:server:checkSentBills', function(source, cb, citizenid)
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if Player then
+        local citizenid = Player.PlayerData.citizenid
+        exports.oxmysql:execute('SELECT * FROM player_bills WHERE sendercitizenid = ?', {citizenid}, function(sentbills)
+            cb(sentbills, citizenid)
+        end)
+    else
+        cb({})
+    end
+end)
+
+-- pay bills
 RegisterNetEvent('rsg-billing:server:paybills', function(data)
     if Config.Debug == true then
         print(data.sender)
@@ -43,6 +59,17 @@ RegisterNetEvent('rsg-billing:server:paybills', function(data)
             TriggerClientEvent('RSGCore:Notify', src, 'You not have enough money', 'error')
         end
     end
+end)
+
+-- cancel bill
+RegisterNetEvent('rsg-billing:server:cancelbill', function(billid)
+    if Config.Debug == true then
+        print(billid)
+    end
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    exports.oxmysql:execute('DELETE FROM player_bills WHERE id = ?', {billid})
+    TriggerClientEvent('RSGCore:Notify', src, 'Bill with ID: '..billid..' has been deleted', 'success')
 end)
 
 -- send bill as society

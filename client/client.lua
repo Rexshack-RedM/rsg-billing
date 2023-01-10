@@ -23,7 +23,7 @@ RegisterNetEvent('rsg-billing:client:billingMenu', function()
             params = { event = 'rsg-billing:client:checkbills' }
         },
         {
-            header = 'Delete Sent Bill (WIP)',
+            header = 'Cancel Sent Bill',
             icon = 'fas fa-dollar-sign',
             txt    = '',
             params = { event = 'rsg-billing:client:deletebills' }
@@ -111,7 +111,7 @@ RegisterNetEvent('rsg-billing:client:checkbills', function()
             BillsShow[#BillsShow + 1] = {
                 header = 'Amount: ' .. v.amount .. '$',
                 icon = 'fas fa-dollar-sign',
-                txt = 'Sender: ' .. v.sender .. ' | From: ' .. v.society,
+                txt = 'ID : ' ..v.id ..' | From : ' .. v.sender .. ' | ' .. v.society,
                 params = { event = 'rsg-billing:server:paybills', 
                     isServer = true,
                     args = {
@@ -136,3 +136,80 @@ RegisterNetEvent('rsg-billing:client:checkbills', function()
         exports['rsg-menu']:openMenu(BillsShow)
     end, PlayerId)
 end)
+
+-- cancel bills with callback -> cancel bill confirm
+RegisterNetEvent('rsg-billing:client:deletebills', function()
+
+    RSGCore.Functions.TriggerCallback('rsg-billing:server:checkSentBills', function(sentbills, citizenid)
+
+        local SentBillsShow = {
+            {
+                header = 'Sent Bills',
+                isMenuHeader = true,
+                icon = 'fas fa-file-invoice-dollar',
+            },
+            {
+                header = 'Citizen ID: ' .. citizenid,
+                isMenuHeader = true,
+                icon = 'fas fa-id-card-clip',
+            },
+        }
+        
+        for _, v in ipairs(sentbills) do
+            SentBillsShow[#SentBillsShow + 1] = {
+                header = 'Amount: ' .. v.amount .. '$',
+                icon = 'fas fa-dollar-sign',
+                txt = 'ID : ' .. v.id .. ' | To : ' .. v.citizenid,
+                params = { event = 'rsg-billing:client:cancelbill', 
+                    isServer = false,
+                    args = {
+                        billid = v.id,
+                    } 
+                }
+            }
+        end
+
+        SentBillsShow[#SentBillsShow + 1] = {
+            header = 'Close',
+            icon   = 'fa-solid fa-circle-xmark',
+            txt    = '',
+            params = { event = 'rsg-menu:closeMenu', }
+        }
+
+        exports['rsg-menu']:openMenu(SentBillsShow)
+    end)
+	
+end)
+
+-- cancel bill confirm
+RegisterNetEvent('rsg-billing:client:cancelbill', function(data)
+    local dialog = exports['rsg-input']:ShowInput({
+        header = "Cancel Bill",
+        submitText = "Submit",
+        inputs = {
+            {
+                text = "Bill ID : "..data.billid,
+                name = "cancelbill",
+                type = "radio",
+                options = {
+                    { value = "yes", text = "Yes" },
+                    { value = "no", text = "No" },
+                },
+            },
+        },
+    })
+
+    if dialog ~= nil then
+        if Config.Debug == true then
+            print(dialog.cancelbill)
+            print(data.billid)
+        end
+        if dialog.cancelbill == 'yes' then
+            TriggerServerEvent('rsg-billing:server:cancelbill', tonumber(data.billid))
+            RSGCore.Functions.Notify('Bill Canceled!', 'primary')
+        else
+            RSGCore.Functions.Notify('Bill not canceled!', 'primary')
+            return
+        end
+    end
+end, false)
