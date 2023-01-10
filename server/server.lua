@@ -3,7 +3,7 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 RSGCore.Functions.CreateCallback('rsg-billing:server:checkbills', function(source, cb, target)
     local Player = RSGCore.Functions.GetPlayer(target)
     if Player then
-        local citizenid = Player.PlayerData.citizenid
+	    local citizenid = Player.PlayerData.citizenid
         exports.oxmysql:execute('SELECT * FROM player_bills WHERE citizenid = ?', {citizenid}, function(bills)
             cb(bills, citizenid)
         end)

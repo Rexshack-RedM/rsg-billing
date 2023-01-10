@@ -1,4 +1,5 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+local jobcheck = false
 
 -- billing menu
 RegisterNetEvent('rsg-billing:client:billingMenu', function()
@@ -72,12 +73,19 @@ RegisterNetEvent('rsg-billing:client:billplayer', function()
     if dialog.billprice == "" then return RSGCore.Functions.Notify("you didn't write the bill price", 'error') end
     if dialog.billtype == 'society' then
         local playerjob = RSGCore.Functions.GetPlayerData().job.name
-        if playerjob == 'unemployed' then
-            RSGCore.Functions.Notify('you are unemployed!', 'error')
-        else
-            TriggerServerEvent('rsg-billing:server:sendSocietyBill', dialog.playerid, dialog.billprice, playerjob)
+        jobcheck = false
+        for _, name in pairs(Config.VerifySociety) do
+            if name == playerjob then
+                jobcheck = true
+            end
         end
-    elseif dialog.billtype == 'player' then
+        if jobcheck == true then
+            TriggerServerEvent('rsg-billing:server:sendSocietyBill', dialog.playerid, dialog.billprice, playerjob)    
+        else
+            RSGCore.Functions.Notify('you are not part of a society!', 'error')
+        end
+    end
+    if dialog.billtype == 'player' then
         TriggerServerEvent('rsg-billing:server:sendPlayerBill', dialog.playerid, dialog.billprice)
     end
 end, false)
