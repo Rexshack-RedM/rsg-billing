@@ -25,4 +25,9 @@ Config.VerifySociety = {
     'railroad',
     'police',
     'medic',
+    'governor1',
+	'governor2',
+	'governor3',
+	'governor4',
+	'governor5',
 }
